@@ -41,7 +41,7 @@ class Switch(object):
     def get_buffer(self):
         """Clear the buffer on the screen
         """
-        output = self.shell.recv(self.buffer_size)
+        output = self.recv(self.buffer_size)
         return output
 
     def update_status(self):
@@ -64,11 +64,17 @@ class Switch(object):
                       str(self.configure_mode))
         return self.enable
 
+    def send(self, s):
+        return self.shell.send(s)
+
+    def recv(self, nbytes):
+        return self.shell.recv()
+
     def send_command(self, command, wait_time=1):
-        self.shell.send(command)
-        self.shell.send(self.line_ending)
+        self.send(command)
+        self.send(self.line_ending)
         time.sleep(wait_time)
-        output = self.shell.recv(self.buffer_size)
+        output = self.recv(self.buffer_size)
         logging.debug("command output is:" + output)
         return output
 
@@ -84,9 +90,9 @@ class Switch(object):
             self.send_command('exit')
             self.update_status()
         elif not self.enable_mode:
-            self.shell.send('enable' + self.line_ending)
+            self.send('enable' + self.line_ending)
             if self.enable_password:
-                self.shell.send(self.enable_password)
+                self.send(self.enable_password)
             self.update_status()
 
     def configure(self):
