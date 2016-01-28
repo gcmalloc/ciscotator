@@ -17,5 +17,5 @@ Enable context:
 Configuration context:
 
     sw = Switch(hostname, username, password)
-    with sw.enable_context:
+    with sw.configuration_context:
         sw.send_command('errdisable detect cause gbic-invalid')
