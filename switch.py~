@@ -1,0 +1,47 @@
+import paramiko
+import sys
+
+class Switch(object):
+    """docstring for Switch"""
+    def __init__(self, ip, username, password):
+        super(Switch, self).__init__()
+        self.ip = ip
+        self.username = username
+        self.password = password
+        self.connect()
+        
+    def connect(self):
+        client = paramiko.SSHClient()
+        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        client.connect(self.ip, 
+                             username=self.username, 
+                             password=self.password, 
+                             look_for_keys=False, 
+                             allow_agent=False)
+        self.shell = client.invoke_shell()
+        print(self.shell.recv(100))
+
+
+    def update_status(self):
+        self.shell.send('\n')
+        self.shell.send('\n')
+        output = self.shell.recv(1000)
+        if '>' in output:
+            return True
+        else:
+            return False
+
+    def send_command(self, command):
+        self.shell.send(command + '\n')
+        output = remote_conn.recv(5000)
+        return output
+
+    def enable(self, password=None):
+        self.shell.send('enable\n')
+        if password:
+            self.shell.send(password + '\n')
+
+    
+if __name__ == '__main__':
+    sw = Switch(sys.argv[1], sys.argv[2], sys.argv[3])
+    sw.enable()
