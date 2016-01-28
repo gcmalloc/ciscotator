@@ -38,12 +38,6 @@ class Switch(object):
     def disable_paging(self):
         self.send_command("terminal length 0")
 
-    def get_buffer(self):
-        """Clear the buffer on the screen
-        """
-        output = self.recv(self.buffer_size)
-        return output
-
     def update_status(self):
         """
         """
@@ -67,8 +61,8 @@ class Switch(object):
     def send(self, s):
         return self.shell.send(s)
 
-    def recv(self, nbytes):
-        return self.shell.recv()
+    def recv(self, nbytes=None):
+        return self.shell.recv(nbytes or self.buffer_size)
 
     def send_command(self, command, wait_time=1):
         self.send(command)
