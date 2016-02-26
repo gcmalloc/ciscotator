@@ -3,9 +3,9 @@ import enum
 import time
 import logging
 import re
+import abc
 
 
-logging.basicConfig(level=logging.DEBUG)
 DEFAULT_BUFFER_SIZE = 1000
 
 class SwitchMode(enum.Enum):
@@ -15,7 +15,7 @@ class SwitchMode(enum.Enum):
 
 class Switch(object):
     """docstring for Switch"""
-    def __init__(self, line_ending='\r\n',
+    def __init__(self, line_ending='\n',
                  enable_password=None, username=None,
                  password=None, quiet=False, buffer_size=DEFAULT_BUFFER_SIZE):
         self.line_ending = line_ending
@@ -27,13 +27,14 @@ class Switch(object):
         self.mode = SwitchMode.disable
         self.buffer_size = buffer_size
         self.update_status()
-        #self.disable_paging()
+        self.flush_input()
+        self.disable_paging()
 
     def expect_prompt(self):
         if self.mode == SwitchMode.configure:
             logging.debug('expecting )#')
             # config
-            return self.expect(')#')
+            return self.expect('config\)#')
         elif self.mode == SwitchMode.enable:
             logging.debug('expecting #')
             # enable
@@ -48,16 +49,18 @@ class Switch(object):
         incoming_buffer = ''
         logging.debug('search for {!s}'.format(char))
         while not bool(matching_ref.search(incoming_buffer)):
-            #logging.debug('current buffer: {!s}'.format(incoming_buffer))
+            logging.debug('current buffer: {!s}'.format(incoming_buffer))
             current_char = self.recv(1)
             incoming_buffer += current_char
 
         return incoming_buffer
 
+    @abc.abstractmethod
     def send(self, s):
         """send a buffer of byte to the switch"""
         raise NotImplemented()
 
+    @abc.abstractmethod
     def recv(self, nbytes):
         """receive the incoming nbyte from the switch,
         will return None if nothing is available
@@ -65,11 +68,12 @@ class Switch(object):
         raise NotImplemented()
 
     def disable_paging(self):
-        self.send_command("terminal length 0")
+        with self.enable_context:
+            self.send_command("terminal length 0")
 
     def update_status(self):
         self.send(self.line_ending)
-        output = self.expect(">|#|[yes/no]:|'yes' or 'no'.")
+        output = self.expect('#|>')
         logging.debug("status detection output is {!s}".format(output))
         if '>' == output[-1]:
             self.mode = SwitchMode.disable
@@ -80,14 +84,12 @@ class Switch(object):
         elif ':' == output[-1] or '.' == output[-1]:
             self.send('no' + self.line_ending)
             self.update_status()
-        logging.debug("current mode is" +
-                      str(self.mode))
+        logging.debug("current mode is" + str(self.mode))
         return self.mode
 
-    def send_command(self, command='', wait_time=0.1):
+    def send_command(self, command='', wait_time=0.3):
         self.send(command)
         self.send(self.line_ending)
-        time.sleep(wait_time)
         output = self.expect_prompt()
         logging.debug("command output is:" + output)
         return output
@@ -95,26 +97,32 @@ class Switch(object):
     def disable(self):
         self.update_status()
         if self.mode == SwitchMode.configure:
-            enable()
+            self.enable()
         if self.mode == SwitchMode.enable:
-            self.send_command('disable')
+            self.send('disable' + self.line_ending)
+            self.expect('>')
         self.update_status()
 
     def enable(self):
         self.update_status()
-        if self.mode == SwitchMode.configure:
-            self.send_command('exit')
-            self.update_status()
-        elif not (self.mode == SwitchMode.enable):
-            self.send_command('enable')
+        if self.mode == SwitchMode.disable:
+            print('sending enable')
+            self.send('enable' + self.line_ending)
+            self.expect(':|#')
             if self.enable_password:
                 self.send(self.enable_password)
-            self.update_status()
+                self.expect('#')
+        elif self.mode == SwitchMode.configure:
+            self.send('exit' + self.line_ending)
+            self.expect('#')
+        self.update_status()
 
     def configure(self):
-        self.enable()
-        if not self.mode == SwitchMode.configure:
-            self.send_command('config t')
+        if self.mode == SwitchMode.disable:
+            self.enable()
+        if self.mode == SwitchMode.enable:
+            self.send('configure terminal' + self.line_ending)
+            self.expect('\)#')
         self.update_status()
 
     @property

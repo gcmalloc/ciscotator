@@ -30,9 +30,5 @@ class SSHSwitch(Switch):
     def recv(self, nbytes=None):
         return self.shell.recv(nbytes or self.buffer_size)
 
-if __name__ == '__main__':
-    sw = Switch(sys.argv[1], sys.argv[2],
-                sys.argv[3], enable_password=sys.argv[3])
-
-    with sw.enable_context:
-        print(sw.send_command("show interface status"))
+    def flush_input(self):
+        pass
