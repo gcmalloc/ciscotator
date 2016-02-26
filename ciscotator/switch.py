@@ -79,6 +79,7 @@ class Switch(object):
             self.mode = SwitchMode.enable
         elif ':' == output[-1] or '.' == output[-1]:
             self.send('no' + self.line_ending)
+            self.update_status()
         logging.debug("current mode is" +
                       str(self.mode))
         return self.mode
