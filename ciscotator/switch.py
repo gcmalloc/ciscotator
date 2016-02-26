@@ -106,7 +106,7 @@ class Switch(object):
     def enable(self):
         self.update_status()
         if self.mode == SwitchMode.disable:
-            print('sending enable')
+            logging.debug('sending enable')
             self.send('enable' + self.line_ending)
             self.expect(':|#')
             if self.enable_password:
