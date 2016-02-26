@@ -69,7 +69,7 @@ class Switch(object):
 
     def update_status(self):
         self.send(self.line_ending)
-        output = self.expect('>|#')
+        output = self.expect(">|#|[yes/no]:|'yes' or 'no'.")
         logging.debug("status detection output is {!s}".format(output))
         if '>' == output[-1]:
             self.mode = SwitchMode.disable
@@ -77,9 +77,11 @@ class Switch(object):
             self.mode = SwitchMode.configure
         elif '#' == output[-1]:
             self.mode = SwitchMode.enable
+        elif ':' == output[-1] or '.' == output[-1]:
+            self.send('no' + self.line_ending)
         logging.debug("current mode is" +
                       str(self.mode))
-        return self.enable
+        return self.mode
 
     def send_command(self, command='', wait_time=0.1):
         self.send(command)
