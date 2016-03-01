@@ -12,6 +12,7 @@ class SwitchMode(enum.Enum):
     disable = 0
     enable = 1
     configure = 2
+    ronmon
 
 class Switch(object):
     """docstring for Switch"""
@@ -26,15 +27,13 @@ class Switch(object):
         self.enable_password = enable_password
         self.mode = SwitchMode.disable
         self.buffer_size = buffer_size
-        self.update_status()
         self.flush_input()
-        self.disable_paging()
 
     def expect_prompt(self):
         if self.mode == SwitchMode.configure:
             logging.debug('expecting )#')
             # config
-            return self.expect('config\)#')
+            return self.expect('config[a-z-]*\)#')
         elif self.mode == SwitchMode.enable:
             logging.debug('expecting #')
             # enable
