@@ -71,7 +71,7 @@ class Switch(object):
 
     def update_status(self):
         self.send(self.line_ending)
-        output = self.expect('#|>')
+        output = self.expect('#|>|\[yes/no\]:')
         logging.debug("status detection output is {!s}".format(output))
         if '>' == output[-1]:
             self.mode = SwitchMode.disable
@@ -88,6 +88,7 @@ class Switch(object):
     def send_command(self, command='', wait_time=0.3):
         self.send(command)
         self.send(self.line_ending)
+        time.sleep(wait_time)
         output = self.expect_prompt()
         logging.debug("command output is:" + output)
         return output

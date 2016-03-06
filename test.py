@@ -57,6 +57,22 @@ class SwitchTest(unittest.TestCase):
         self.switch.configure()
         self.switch.mode == SwitchMode.configure
 
+    def test_config_vlan(self):
+        self.switch.configure()
+        self.switch.mode == SwitchMode.configure
+        self.switch.send_command('interface vlan 1')
+        self.switch.mode == SwitchMode.configure
+        self.switch.enable()
+        self.switch.mode == SwitchMode.enable
+
+    def test_config_(self):
+        self.switch.configure()
+        self.switch.mode == SwitchMode.configure
+        self.switch.send_command('interface Gigabit 1/1')
+        self.switch.mode == SwitchMode.configure
+        self.switch.enable()
+        self.switch.mode == SwitchMode.enable
+
     def test_switch_enable_config(self):
         self.switch.configure()
         self.switch.mode == SwitchMode.configure
