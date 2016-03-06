@@ -12,7 +12,6 @@ class SwitchMode(enum.Enum):
     disable = 0
     enable = 1
     configure = 2
-    ronmon
 
 class Switch(object):
     """docstring for Switch"""
