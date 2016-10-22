@@ -9,6 +9,7 @@ setup(
     url='https://github.com/gcmalloc/ciscotator',
     author='gcmalloc',
     author_email='gcmalloc@gmail.com',
+    install_requires=['pyserial', 'paramiko', 'enum34'],
     packages=[
         'ciscotator',
         'ciscotator.con'],
