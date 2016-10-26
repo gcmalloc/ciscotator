@@ -12,6 +12,7 @@ class SwitchMode(enum.Enum):
     disable = 0
     enable = 1
     configure = 2
+    bootloader = 3
 
 class Switch(object):
     """docstring for Switch"""
@@ -37,6 +38,10 @@ class Switch(object):
             logging.debug('expecting #')
             # enable
             return self.expect('#')
+        elif self.mode == SwitchMode.bootloader:
+            logging.debug('expecting rommon [^>]*>')
+            # config
+            return self.expect('rommon [^>]*>')
         elif self.mode == SwitchMode.disable:
             logging.debug('expecting >')
             # normal mode ?
@@ -74,7 +79,10 @@ class Switch(object):
         output = self.expect('#|>|\[yes/no\]:')
         logging.debug("status detection output is {!s}".format(output))
         if '>' == output[-1]:
-            self.mode = SwitchMode.disable
+            if 'rommon' in output:
+                self.mode = SwitchMode.bootloader
+            else:
+                self.mode = SwitchMode.disable
         elif ')#' == output[-2:]:
             self.mode = SwitchMode.configure
         elif '#' == output[-1]:
